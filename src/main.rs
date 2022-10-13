@@ -1,13 +1,23 @@
-use std::fmt::format;
+use std::error::Error;
+use std::fmt::{Display, format, Formatter};
+use anyhow::Context;
 
 #[derive(Debug)]
 enum OutOfBoundError {
     Overflow,
-    Underflow
+    Underflow,
 }
 
+impl Display for OutOfBoundError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for OutOfBoundError {}
+
 impl From<OutOfBoundError> for String {
-    fn from(v : OutOfBoundError) -> Self {
+    fn from(v: OutOfBoundError) -> Self {
         format!("{:?}", v)
     }
 }
@@ -24,19 +34,21 @@ impl<'a> Adder<'a> {
     }
 }
 
-fn always_err() -> Result<(), String> {
-    Err("Hello, Failure".into())
+fn always_err() -> anyhow::Result<()> {
+    // anyhow::bail!("Hello, Failure")
+    Err(anyhow::anyhow!("Hello too"))
 }
 
-fn do_it() -> Result<(), String>{
+fn do_it() -> anyhow::Result<()> {
     let v = Adder(&126).add_one()?;
-    always_err()?;
+    always_err().context("Additional information")?;
     println!("{}", v);
     Adder(&-128).sub_one()?;
     Ok(())
 }
 
 
-fn main() -> Result<(), String> {
-    do_it()
+fn main() -> anyhow::Result<()> {
+    do_it()?;
+    Ok(())
 }
